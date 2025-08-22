@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Blogs</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .blog-card {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+    }
+    .actions {
+      margin-top: 10px;
+    }
+    button {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>My Blogs</h1>
+  <button onclick="goToAddBlog()">Add New Blog</button>
+  <ul id="blogsList"></ul>
+
+  <script>
+        console.log("Script running");
+        let BlogList = document.getElementById('blogsList');
+        document.addEventListener("DOMContentLoaded", () => {
+            myBlogs();
+        });
+        async function myBlogs (){
+            console.log("hi");
+            try{
+                const res = await fetch('http://localhost:9696/author/dashboard/api/myBlogs',{
+                method : 'GET',
+                headers : {
+                    'Content-Type' : 'application/json'
+                },
+                credentials : 'include'
+                })
+                const data = await res.json();
+                console.log(data);
+                console.log(data.Blogs);
+                if(res.status===401){
+                    window.location.href = '/author/api/login';
+                    return;
+                }
+                if(res.status===400){ 
+                    window.location.href = '/author/api/login';
+                    return
+                }
+                if(res.status===200)
+                {
+                    const collectionBlogs = data.Blogs;
+                    console.log(collectionBlogs);
+                    renderBlogs(collectionBlogs);
+                }
+            }catch(err){
+                console.log("Some error has occured",err);
+            }
+        }
+        
+        const renderBlogs = (Blogs) =>{
+            BlogList.innerHTML = "";
+           Blogs.forEach((ele)=>{
+                let li = document.createElement('li');
+                li.classList.add('blog-card');
+                li.innerHTML = `
+                    <h3>${ele.title}</h3>
+                    <p>${ele.content}</p>
+                   <button onclick="editBlog('${ele._id}')" class  = "edit-btn">Edit</button>
+                   <button onclick="deleteBlog('${ele._id}')" class = "delete-btn">Delete</button>
+                `
+                BlogList.appendChild(li);
+           })
+        }
+        function goToAddBlog() {
+          window.location.href = '/author/dashboard/addBlog';
+          return;
+        }
+
+      async  function  editBlog (ele){
+            const newTitle = prompt("Enter new Title");
+            const newContent = prompt("Enter new Content");
+            if(!newTitle || !newContent){
+              return;
+            }
+            try{
+              const Updatedfields = {
+                title:newTitle,
+                content:newContent
+              }
+                const res = await fetch(`http://localhost:9696/author/dashboard/edit/${ele}`,{
+                  method : 'PUT',
+                  headers : {
+                    'Content-Type' : 'application/json'
+                  },
+                  credentials : 'include',
+                  body : JSON.stringify(Updatedfields)
+                })
+                const data = await res.json();
+                if(res.status===404){
+                  console.log("Blog not found");
+                  return
+                }
+                if(res.status===200){
+                  myBlogs();
+                }
+            }catch(err){
+                console.log("Internal Server error", err);
+            }
+        }
+
+        async function deleteBlog (ele){
+            try{
+              res = await fetch(`http://localhost:9696/author/dashboard/delete/${ele}`,{
+                method: 'DELETE',
+                headers : {
+                  'Content-Type' : 'application/json'
+                },
+                credentials : 'include'
+              })
+              if(res.status===200){
+                myBlogs();
+              }
+            }catch(err){
+              console.log("Cannot delete the blog due to some Server error");
+            }
+        }
+    
+  </script>
+</body>
+</html>

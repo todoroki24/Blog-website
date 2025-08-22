@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Frontend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            width: 300px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            font-size: 14px;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h2>Register</h2>
+    <form id="registerForm">
+        <input type="text" id="fullName" placeholder="Enter your name">
+        <input type="email" id="email" placeholder="Enter your Email">
+        <input type="file" id="fileInput" >
+        <!-- <button onclick="uploadProfilePhoto()">Upload Profile Photo</button> -->
+        <input type="password" id="password" placeholder="Enter password">
+        <button type="submit">Submit</button>
+        <div class="result" id="result"></div>
+    </form>
+    
+</div>
+
+<script>
+const form = document.getElementById('registerForm')
+
+form.addEventListener("submit",async (event) =>
+{
+event.preventDefault();
+const name = document.getElementById('fullName').value.trim();
+const email = document.getElementById('email').value.trim();
+const password = document.getElementById('password').value.trim();
+const fileInput = document.getElementById('fileInput');
+const profilePhoto = fileInput.files[0];
+console.log(fileInput.files[0]);
+console.log(profilePhoto)
+
+if(name==='')
+{
+    alert("Name is required");
+    return;
+}
+if(!/^\S+@\S+\.\S+$/.test(email))
+{
+    alert("Invalid email address");
+    return;
+}
+if(password.length<6)
+{
+    alert("Password must be of atleast 6 characters");
+    return;
+}
+
+if(!profilePhoto){
+    alert("Please select a file first");
+    return;
+}
+const formData = new FormData();
+
+formData.append("fullName",name);
+formData.append('email',email)
+formData.append('password',password)
+formData.append('profile',profilePhoto)
+
+// const User = {
+//     fullName : name,
+//     email : email,
+//     password : password
+// };
+
+try{
+    const res = await fetch('http://localhost:9696/author/api/register',{
+        method : 'POST',
+        body : formData
+    });
+    if (res.status===200) {
+      window.location.href = './login'; // Agar current folder hai file hai to ./use krke file ka name dedo
+      return;
+    }
+
+    const data = await res.json();
+    if (res.status === 201) {
+      alert(data.message);
+    } else {
+      alert(data.error || "Something went wrong");
+    }
+}catch(err){
+    console.error(err);
+    alert("Request failed");
+}
+ }
+)
+</script>
+</body>
+</html>

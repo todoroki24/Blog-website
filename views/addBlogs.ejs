@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Blogs Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #blogList {
+      list-style: none;
+      padding: 0;
+    }
+    #blogList li {
+      background: #f4f4f4;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    #blogList h3 {
+      margin: 0;
+      font-size: 20px;
+      color: #333;
+    }
+    #blogList p {
+      margin: 5px 0;
+      color: #555;
+    }
+    .blog-date {
+      font-size: 12px;
+      color: gray;
+    }
+  </style>
+</head>
+<body onload="validator()">
+  <h1>Welcome <span id="username"></span></h1>
+  <button id="logoutBtn">Log Out</button>
+
+  <!-- Add Blog Form -->
+  <h2>Add New Blog</h2>
+  <form id="addBlogForm">
+    <input type="text" id="title" placeholder="Blog Title" required />
+    <br><br>
+    <textarea id="content" placeholder="Blog Content" rows="4" cols="40"></textarea>
+    <br><br>
+    <input id="imgUpload" type="file" accept="image/*" />
+    <button type="button" id="addBlog">Add Blog</button>
+  </form>
+
+  <!-- Blog List -->
+  <h2>Your Blogs</h2>
+  <ul id="blogList"></ul>
+
+  <script>
+    let data = null;
+    const validator = async ()=>{
+    try{
+      console.log("chal rha hai")
+      const res = await fetch('http://localhost:9696/author/dashboard/api/myBlogs',{
+        method : 'GET',
+        headers : {
+          'Content-Type' : 'application/json'
+        },
+        credentials : 'include'
+      });
+      if(res.status===401){
+        window.location.href = '/author/api/login'
+        return
+      }
+        data = await res.json();
+       console.log(data.user);
+
+      const name = document.getElementById("username")
+      name.innerText = data.user.fullName
+      renderBlogs(data.Blogs);
+    }catch(err){
+      console.log("Error loading the dashboard",err);
+    }
+    }
+
+    
+
+
+    const addBtn = document.getElementById("addBlog");
+    const title = document.getElementById('title');
+    const content = document.getElementById('content');
+    addBtn.addEventListener('click',async (event)=>{
+      event.preventDefault();
+      
+      const newBlog = {
+        title:title.value,
+        content:content.value,
+      }
+        try{
+        const res = await fetch('http://localhost:9696/author/dashboard/addBlog',{
+          method : 'POST',
+          credentials : 'include',
+          body:JSON.stringify(newBlog)
+        }
+        
+      );
+      
+      const responseData = await res.json();
+      if(res.status===200)
+      {
+        console.log(responseData.Blogs);
+         renderBlogs(responseData.Blogs);
+      }
+      console.log(responseData);
+      }catch(err){
+        console.log("Some error has Occured",err);
+      }
+      title.value =  "";
+      content.value = "";
+    })
+
+    function renderBlogs(Blogs){ // Blog is array of object aur array ke har ek object pe loop lg rha hai
+      let blogList = document.getElementById("blogList");
+      blogList.innerHTML = "";
+      Blogs.forEach(element => {
+        let newBlog = document.createElement('li');
+        const date = new Date(element.createdAt).toLocaleString();
+        newBlog.innerHTML = `
+          <h3>${element.title}</h3>
+          <p>${element.content}</p>
+          <img src = "${element.image}" alt="Blog Image" />
+          <div class="blog-date">${element.createdAt}</div>
+        `
+        blogList.appendChild(newBlog);
+      });
+      
+    }
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    logoutBtn.addEventListener('click',async ()=>{
+      try{
+          const res = await fetch('http://localhost:9696/author/logout',{
+            method : 'GET',
+            headers : {
+              'Content-Type' : 'application/json'
+            },
+            credentials : "include"
+          })
+          if(res.status===200)
+          {
+              window.location.href = '/author/api/login';
+          }
+      }catch(err){
+        console.log(err);
+      }
+     
+    })
+  </script>
+</body>
+</html>

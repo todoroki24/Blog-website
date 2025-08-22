@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Author Profile</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --text: #222;
+    --muted: #666;
+    --border: #ddd;
+    --primary: #0077ff;
+    --hover: #f0f8ff;
+  }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 20px;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: auto;
+  }
+
+  .profile-header {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+
+  .profile-header h2 {
+    margin: 0 0 10px;
+    font-size: 26px;
+  }
+
+  .followers {
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .blogs-list {
+    display: grid;
+    gap: 16px;
+    list-style: none;
+    padding: 0;
+  }
+
+  .blog-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .blog-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    background: var(--hover);
+  }
+
+  .blog-title {
+    margin: 0 0 8px;
+    font-size: 20px;
+  }
+
+  .blog-content {
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .loading, .empty, .error {
+    padding: 14px;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    text-align: center;
+    font-size: 14px;
+  }
+
+  .hidden { display: none; }
+
+  .followers-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.followers-section h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  color: var(--primary);
+}
+
+.followers-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.follower-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  transition: background 0.2s ease;
+}
+
+.follower-card:hover {
+  background: var(--hover);
+}
+
+.follower-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.follower-name {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+</style>
+</head>
+<body onload="onLoad()">
+
+<div class="container">
+  <!-- Profile Header -->
+  <div id="profileHeader" class="profile-header">
+    <h2 id="authorName">Author Name</h2>
+    <div class="followers" id="followersCount">Followers: 0</div>
+  </div>
+
+  <!-- Followers Section -->
+<div id="followersSection" class="followers-section">
+  <h3>Followers</h3>
+  <ul id="followersList" class="followers-list"></ul>
+</div>
+
+  <!-- Loading / Empty / Error -->
+  <div id="loading" class="loading">Loading blogs…</div>
+  <div id="empty" class="empty hidden">No blogs yet.</div>
+  <div id="error" class="error hidden">Something went wrong.</div>
+
+  <!-- Blogs List -->
+  <ul id="blogsList" class="blogs-list"></ul>
+</div>
+
+<script>
+    const urlParts = window.location.pathname.split('/');
+    const authorId = urlParts[urlParts.length-1];
+    const onLoad = async () =>
+    {
+        try{
+        const res = await fetch(`http://localhost:9696/author/api/profile/${authorId}`,{
+        method : 'GET',
+        headers : {
+          'Content-Type' : 'application/json'
+        },
+        credentials : 'include',
+        })
+        if(res.status===200){
+          const data = await res.json();
+          const authorInformation = data.authorInfo;
+          console.log(authorInformation)
+          renderAuthorInformation(authorInformation);
+        }
+      }catch(err){
+        console.log(err);
+      }
+    }
+    const renderAuthorInformation = (authorInformation) =>{
+        const authorName = authorInformation.fullName;
+        const BlogsWrittenByAuthor = authorInformation.Blog;
+        const authorFollowers = authorInformation.followers;
+        const authorNameChange = document.getElementById('authorName');
+        authorNameChange.innerText = authorName;
+        const loading = document.getElementById('loading');
+        const blogsList = document.getElementById('blogsList');
+        const followers = document.getElementById('followersCount');
+        const followersList = document.getElementById('followersList');
+        blogsList.innerHTML = "";
+        BlogsWrittenByAuthor.forEach((Blog)=>{
+            let li = document.createElement('li');
+            li.className = 'blogs-list';
+            li.innerHTML = ` 
+                <h3>${Blog.title}</h3>  
+                <p>${Blog.content}</p>
+            `
+            blogsList.appendChild(li);
+        }) 
+        loading.className = "hidden"
+        console.log(authorFollowers)
+
+        followers.innerText = `Followers : ${authorFollowers.length}`
+        followersList.innerHTML = "";
+        authorFollowers.forEach((follower)=>{
+            let li = document.createElement('li');
+            li.className = 'followers-list'
+            li.innerHTML = `
+                <p>${follower.fullName}</p>
+            `
+            followersList.appendChild(li);
+        })
+    }
+</script>
+
+</body>
+</html>

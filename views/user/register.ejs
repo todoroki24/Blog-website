@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimal Frontend</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            width: 300px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            font-size: 14px;
+            color: green;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Register</h2>
+    <input type="text" id="fullName" placeholder="Enter your name">
+    <input type="email" id="email" placeholder="Enter your Email">
+    <input type="password" id="password" placeholder="Enter password">
+    <button onclick=validateForm(event)>Submit</button>
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+
+
+async function validateForm(event)
+{
+event.preventDefault();
+const name = document.getElementById('fullName').value.trim();
+const email = document.getElementById('email').value.trim();
+const password = document.getElementById('password').value.trim();
+
+if(name==='')
+{
+    alert("Name is required");
+    return;
+}
+if(!/^\S+@\S+\.\S+$/.test(email))
+{
+    alert("Invalid email address");
+    return;
+}
+if(password.length<6)
+{
+    alert("Password must be of atleast 6 characters");
+    return;
+}
+
+const User = {
+    fullName : name,
+    email : email,
+    password : password
+};
+
+try{
+    console.log("Calling fetch...");
+    const res = await fetch(`http://localhost:9696/user/api/register`,{
+        method : 'POST',
+        headers : {
+            'Content-Type' : 'application/json'
+        },
+        credentials : 'include',
+        body : JSON.stringify(User) // JS Object ko JSON string me
+    }
+    
+)
+    const data = await res.json();
+    if(res.status===400 ){
+        console.log(data.error);
+    }
+    if(res.status===200){
+        window.location.href = '/user/api/login'
+    }
+}catch(err){
+    alert("Internal server error");
+    console.log(err);
+}
+
+}
+</script>
+</body>
+</html>
